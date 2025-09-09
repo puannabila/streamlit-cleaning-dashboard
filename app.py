@@ -69,6 +69,29 @@ if uploaded_file is not None:
 
         df_clean["Nama Perusahaan"] = df_clean["Nama Perusahaan"].astype(str).apply(clean_company_name)
 
+    # --- Standarisasi Nama Kelurahan Usaha ---
+    if "kelurahan_usaha" in df_clean.columns:
+        kelurahan_mapping = {
+            "Pallima": "Pal Lima",
+            "Sungaijawi Dalam": "Sungai Jawi Dalam",
+            "Sungaijawi Luar": "Sungai Jawi Luar",
+            "Daratsekip": "Darat Sekip",
+            "Sungaibangkong": "Sungai Bangkong",
+            "Sungaijawi": "Sungai Jawi",
+            "Benuamelayu Darat": "Benua Melayu Darat",
+            "Benuamelayu Laut": "Benua Melayu Laut",
+            "Kotabaru": "Kota Baru",
+            "Parittokaya": "Parit Tokaya",
+            "Dalambugis": "Dalam Bugis",
+            "Paritmayor": "Parit Mayor",
+            "Tambelansampit": "Tambelan Sampit",
+            "Tanjunghulu": "Tanjung Hulu",
+            "Tanjunghilir": "Tanjung Hilir",
+            "Batulayang": "Batu Layang"
+        }
+
+        df_clean["kelurahan_usaha"] = df_clean["kelurahan_usaha"].replace(kelurahan_mapping)
+
     st.subheader("Data Setelah Cleaning")
     st.dataframe(df_clean.head())
 
