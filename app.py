@@ -1,6 +1,19 @@
 import streamlit as st
 import pandas as pd
 import re
+from sqlalchemy import create_engine
+
+# --- Konfigurasi koneksi database ---
+DB_HOST = "sql.freedb.tech"
+DB_PORT = 3306
+DB_NAME = "freedb_dashboardkp"
+DB_USER = "freedb_puankp"
+DB_PASS = "67$HZZgR9zvAAns"
+
+# Buat engine koneksi SQLAlchemy
+engine = create_engine(
+    f"mysql+pymysql://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 st.title("Upload & Cleaning Data Excel")
 
@@ -33,11 +46,13 @@ if uploaded_file is not None:
 
     # Standarisasi format tanggal -> dd/mm/yyyy
     if "Day of Tanggal Pengajuan Proyek" in df_clean.columns:
-        # Ganti bulan Indonesia ke Inggris
         for indo, eng in bulan_mapping.items():
-            df_clean["Day of Tanggal Pengajuan Proyek"] = df_clean["Day of Tanggal Pengajuan Proyek"].astype(str).str.replace(indo, eng, regex=False)
+            df_clean["Day of Tanggal Pengajuan Proyek"] = (
+                df_clean["Day of Tanggal Pengajuan Proyek"]
+                .astype(str)
+                .str.replace(indo, eng, regex=False)
+            )
 
-        # Ubah ke datetime lalu format dd/mm/yyyy
         df_clean["Day of Tanggal Pengajuan Proyek"] = pd.to_datetime(
             df_clean["Day of Tanggal Pengajuan Proyek"], errors="coerce"
         ).dt.strftime("%d/%m/%Y")
@@ -47,12 +62,9 @@ if uploaded_file is not None:
         def clean_company_name(name):
             if pd.isnull(name):
                 return name
-            # Ubah ke uppercase
             name = name.upper()
-            # Hapus spasi ganda
-            name = re.sub(r'\s+', ' ', name)
-            # Hapus karakter khusus kecuali titik dan koma
-            name = re.sub(r'[^\w\s.,]', '', name)
+            name = re.sub(r'\s+', ' ', name)  # hapus spasi ganda
+            name = re.sub(r'[^\w\s.,]', '', name)  # hapus karakter khusus
             return name.strip()
 
         df_clean["Nama Perusahaan"] = df_clean["Nama Perusahaan"].astype(str).apply(clean_company_name)
@@ -60,13 +72,21 @@ if uploaded_file is not None:
     st.subheader("Data Setelah Cleaning")
     st.dataframe(df_clean.head())
 
-    # Download hasil cleaning
+    # --- Simpan hasil cleaning ke file Excel ---
     cleaned_file = "data_cleaning.xlsx"
     df_clean.to_excel(cleaned_file, index=False)
     with open(cleaned_file, "rb") as f:
         st.download_button("Download Hasil Cleaning", f, file_name="data_cleaning.xlsx")
 
-    # Dashboard sederhana
+    # --- Simpan hasil cleaning ke Database ---
+    if st.button("Simpan ke Database"):
+        try:
+            df_clean.to_sql("data_cleaning", con=engine, if_exists="replace", index=False)
+            st.success("Data berhasil disimpan ke database!")
+        except Exception as e:
+            st.error(f"Gagal menyimpan ke database: {e}")
+
+    # --- Dashboard sederhana ---
     st.subheader("Dashboard Visualisasi")
     if "Kecamatan" in df_clean.columns:
         kecamatan_count = df_clean["Kecamatan"].value_counts()
