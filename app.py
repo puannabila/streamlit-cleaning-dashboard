@@ -15,8 +15,8 @@ if uploaded_file is not None:
     df_clean = df.dropna()
 
     # Standarisasi format tanggal -> dd/mm/yyyy
-    if "Tanggal" in df_clean.columns:
-        df_clean["Tanggal"] = pd.to_datetime(df_clean["Tanggal"], errors="coerce").dt.strftime("%d/%m/%Y")
+    if "Day of Tanggal Pengajuan Proyek" in df_clean.columns:
+        df_clean["Day of Tanggal Pengajuan Proyek"] = pd.to_datetime(df_clean["Day of Tanggal Pengajuan Proyek"], errors="coerce").dt.strftime("%d/%m/%Y")
 
     # Standarisasi Nama Perusahaan
     if "Nama Perusahaan" in df_clean.columns:
